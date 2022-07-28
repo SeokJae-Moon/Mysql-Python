@@ -1,0 +1,482 @@
+# Mysql Download and Install
+
+# vscode 터미널에서 pip install pymysql 실행
+
+# Code 1
+
+import pymysql
+
+conn = pymysql.connect(host='localhost', user='root', password='1234', db='testdb', charset='utf8')
+
+curs = conn.cursor()
+
+sql = "select * from member"
+curs.execute(sql)
+
+rows = curs.fetchall()
+print(rows)
+
+conn.close()
+
+#------------------------------------------------------------------------------------#
+
+conn = pymysql.connect(host='localhost', user='root', password='1234', db='testdb', charset='utf8')
+
+curs = conn.cursor()
+sql = """insert into member(email)
+         values (%s)"""
+curs.execute(sql, ('Hang@'))
+curs.execute(sql, ('Seok'))
+
+data = (('Ahan'),
+        ('Bom'))
+sql = """insert into member(memID) values (%s)"""
+curs.executemany(sql, data)
+conn.commit()
+
+conn.close()
+
+# #-----------------------------------------------------------------------------------------
+conn = pymysql.connect(host='localhost', user='root', password='1234', db='testdb', charset='utf8')
+
+curs = conn.cursor()
+sql = """update member
+         set idx = 1
+         where memID = 'MSJ'"""
+curs.execute(sql)
+
+#sql = "delete from customer where id=%s"
+#curs.execute(sql, 6)
+
+conn.commit()
+conn.close()
+
+#-----------------------------------------------------------------
+
+conn = pymysql.connect(host='localhost', user='root', password='1234',
+                       db='testdb', charset='utf8')
+
+try:
+    # INSERT
+    with conn.cursor() as curs:
+        #sql = "insert into member(name,category,region) values (%s, %s, %s)"
+        #curs.execute(sql, ('이광수', 1, '서울'))
+        sql = "insert into member(memID) values (%s)"
+        curs.execute(sql, ('kwang'))
+
+    conn.commit()
+
+    # SELECT
+    with conn.cursor() as curs:
+        sql = "select * FROM member"
+        curs.execute(sql)
+        rs = curs.fetchall()
+        for row in rs:
+            print(row)
+
+finally:
+    conn.close()
+
+# Code 2:
+import os
+import sys
+import pymysql
+
+def mydbConn():
+    return pymysql.connect(host='localhost', user='root', password='1234', db='testdb', charset='utf8')
+
+
+def screen():
+    print("\n### 간단한 회원 관리 프로그램 ###")
+    print("0.초기생성 1.멤버추가 2.멤버리스트 3.멤버찾기 4. 정보수정 5. 화면지우기 6.종료")
+
+
+def memberAdd() :
+    name = input("->이름: ")
+    email = input("->이메일: ")
+    age = input("->나이: ")
+
+    conn = mydbConn()
+    curs = conn.cursor()
+    sql = """insert into member (email, name, age) values (%s, %s, %s)"""
+    curs.execute(sql, (name,email,age))
+
+    conn.commit()
+    conn.close()
+
+def memberAllList(memlist):
+    print("\n-------- 정보 -----------")
+    print("성명\t\t이메일\t\t\t나이")
+    conn = mydbConn()
+    curs = conn.cursor()
+    sql = "select * from member"
+
+    curs.execute(sql)
+    rows = curs.fetchall()
+
+    for row in rows:
+         print(row[0],'\t', row[1], '\t', row[2]) #print(row['idx'], row['email'], row['age'])
+
+    conn.close()
+
+def memberSearch(memlist):
+    ser_name = input("찾고하고 싶은 이름:  ")
+
+    conn = mydbConn()
+    curs = conn.cursor()
+    sql = "select * from member where name=%s"
+
+    curs.execute(sql, ser_name)
+    rows = curs.fetchall()
+    for row in rows:
+        print(row[0],'\t', row[1], '\t', row[2])
+
+    conn.close()
+
+def memberModify(memlist):
+    ser_name = input("찾고 싶은 이름:  ")
+    conn = mydbConn()
+    curs = conn.cursor()
+
+    sql = "select * from member where name=%s"
+    curs.execute(sql, ser_name)
+    rows = curs.fetchall()
+    for row in rows:
+        print(row[0], '\t', row[1], '\t', row[2])
+
+    modAge = input('변경 나이->')
+
+    sql = """update member set age = %s
+             where name = %s"""
+    curs.execute(sql, (modAge, ser_name))
+    #
+    # #sql = "delete from customer where id=%s"
+    # #curs.execute(sql, 6)
+    #
+    print("변경 되었음.")
+    conn.commit()
+    conn.close()
+
+def createNodeInit():
+    conn = mydbConn()
+    curs = conn.cursor()
+    sql = """insert into member (name, email, age) values (%s, %s, %s)"""
+    curs.execute(sql, ('temp1', 'temp1@nate.com', '100'))
+    curs.execute(sql, ('temp2', 'temp2@nate.com', '200'))
+    conn.commit()
+    print("초기 데이터 추가되었음.")
+    conn.close()
+
+
+if __name__ == '__main__' :
+    memlist = []
+
+    while True:
+        screen()
+        choice = input("-> ")
+
+        if choice == "0":
+           createNodeInit()
+        elif choice == "1":
+            memberAdd()
+        elif choice == "2":
+            memberAllList(memlist)
+        elif choice == "3":
+            memberSearch(memlist)
+        elif choice == "4":
+            memberModify(memlist)
+        elif choice == "5" :
+            os.system("cls")
+        elif choice == "6":
+            sys.exit(1)
+        else:
+            print("잘못된 번호! 다시 입력바랍니다.")
+
+
+# Code 3:
+import os
+import sys
+import pymysql
+
+def mydbConn():
+    return pymysql.connect(host='localhost', user='root', password='1234', db='testdb', charset='utf8')
+
+
+def screen():
+    print("\n### 간단한 회원 관리 프로그램 ###")
+    print("0.초기생성 1.멤버추가 2.멤버리스트 3.멤버찾기 4. 정보수정 5. 화면지우기 6.종료")
+
+def createNodeInit():
+    conn = mydbConn()
+    try :
+        with conn.cursor() as curs:
+            sql = "insert into member (name, email, age) values (%s, %s, %s)"
+            curs.execute(sql, ('temp1', 'temp1@nate.com', '100'))
+            curs.execute(sql, ('temp2', 'temp2@nate.com', '200'))
+        conn.commit()
+        print("초기 데이터 추가되었음.")
+    finally:
+        conn.close()
+
+def memberAdd() :
+    name = input("->이름: ")
+    email = input("->이메일: ")
+    age = input("->나이: ")
+
+    conn = mydbConn()
+    try:
+        with conn.cursor() as curs:
+            sql = "insert into member (name, email, age) values (%s, %s, %s)"
+            curs.execute(sql, (name,email,age))
+        conn.commit()
+        print("%s님이 추가되었음!" % (name))
+    finally:
+        conn.close()
+
+def memberAllList(memlist):
+    print("\n-------- 정보 -----------")
+    print("성명\t\t이메일\t\t\t나이")
+    conn = mydbConn()
+
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member"
+            curs.execute(sql)
+            rows = curs.fetchall()
+            for row in rows:
+                print(row[0],'\t', row[1], '\t', row[2]) #print(row['idx'], row['email'], row['age'])
+    finally:
+        conn.close()
+
+def memberSearch(memlist):
+    ser_name = input("찾고하고 싶은 이름:  ")
+
+    conn = mydbConn()
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member where name=%s"
+            curs.execute(sql, ser_name)
+            rows = curs.fetchall()
+            for row in rows:
+                print(row[0],'\t', row[1], '\t', row[2])
+    finally:
+        conn.close()
+
+def memberModify(memlist):
+    ser_name = input("찾고 싶은 이름:  ")
+
+    conn = mydbConn()
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member where name=%s"
+            curs.execute(sql, ser_name)
+            rows = curs.fetchall()
+            for row in rows:
+                print(row[0], '\t', row[1], '\t', row[2])
+
+        modAge = input('변경 나이->')
+
+        with conn.cursor() as curs:
+            sql = "update member set age = %s where name = %s"
+            curs.execute(sql, (modAge, ser_name))
+
+        conn.commit()
+        print("%s님 정보가 변경되었음!" % (name))
+    finally:
+        conn.close()
+    #
+    # #sql = "delete from customer where id=%s"
+    # #curs.execute(sql, 6)
+    #
+
+if __name__ == '__main__' :
+    memlist = []
+
+    while True:
+        screen()
+        choice = input("-> ")
+
+        if choice == "0":
+            memlist = createNodeInit()
+        elif choice == "1":
+            memberAdd()
+        elif choice == "2":
+            memberAllList(memlist)
+        elif choice == "3":
+            memberSearch(memlist)
+        elif choice == "4":
+            memberModify(memlist)
+        elif choice == "5":
+            os.system("cls")
+        elif choice == "6":
+            sys.exit(1)
+        else:
+            print("잘못된 번호! 다시 입력바랍니다.")
+
+
+
+# Code 4
+import os
+import sys
+import pymysql
+
+class Member:
+    def __init__(self):
+        self.__name = ''
+        self.__email = ''
+        self.__major = ''
+        
+    @property
+    def name(self):
+        return self.__name
+    @name.setter
+    def name(self, name):
+        self.__name = name
+
+    @property
+    def email(self):
+        return self.email
+    @email.setter
+    def email(self, email):
+        self.__email = email
+
+    @property
+    def major(self):
+        return self.major
+    @major.setter
+    def major(self, major):
+        self.__major = major
+
+def mydbConn():
+    return pymysql.connect(host='localhost', user='root', password='1234', db='world', charset='utf8')
+
+def screen():
+    print("\n### DB기반의 클래스를 이용한 회원 관리 프로그램 ###")
+    print("  1.회원추가 2.회원목록 3.회원검색 4.회원정보수정 5.화면지우기 6.종료 ")
+
+def createMember():
+    name = input("->이름: ")        
+    email = input("->이메일: ")        
+    major = input("->전공: ")
+
+    member = Member()
+    member.__name = name
+    member.__email = email
+    member.__major = major
+        
+    conn = mydbConn() 
+    try:
+        with conn.cursor() as curs:
+            sql = "insert into member (name, email, major) values (%s, %s, %s)"
+            curs.execute(sql, (member.__name, member.__email, member.__major))
+        conn.commit()
+        print("%s님이 추가되었음!" % (name))
+    finally:
+        member = pymysql.NULL
+        conn.close()    
+
+def memberAllList():
+    print("\n--------------- 정보 ----------------------------------")
+    print("ID\t성명\t\t이메일\t\t\t전공")
+    print("-------------------------------------------------------")
+    conn = mydbConn()
+    curs = conn.cursor()
+    member = Member()
+
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member"
+            curs.execute(sql)
+            rows = curs.fetchall()
+            
+            for row in rows:
+                id = row[0]                
+                member.__name = row[1]
+                member.__email = row[2]
+                member.__major = row[3]
+                print(id,'\t',  member.__name, '\t', member.__email, '\t', member.__major) 
+    finally:
+        member = pymysql.NULL
+        conn.close()
+
+def memberSearch():
+    ser_name = input("찾고하고 싶은 이름:  ")
+    conn = mydbConn()
+    member = Member()
+
+    print("-------------------------------------------------------")
+    print("ID\t성명\t\t이메일\t\t\t전공")    
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member where name=%s"
+            curs.execute(sql, ser_name)
+            rows = curs.fetchall()
+            for row in rows:
+                id = row[0]                
+                member.__name = row[1]
+                member.__email = row[2]
+                member.__major = row[3]
+                print(id,'\t',  member.__name, '\t', member.__email, '\t', member.__major) 
+    finally:
+        member = pymysql.NULL
+        conn.close()
+    print("-------------------------------------------------------")
+
+def memberModify():
+    ser_name = input("찾고 싶은 이름:  ")
+    conn = mydbConn()
+    member = Member()
+
+    try:
+        with conn.cursor() as curs:
+            sql = "select * from member where name=%s"
+            curs.execute(sql, ser_name)
+            rows = curs.fetchall()
+            for row in rows:
+                id = row[0]                
+                member.__name = row[1]
+                member.__email = row[2]
+                member.__major = row[3]
+                print(id,'\t',  member.__name, '\t', member.__email, '\t', member.__major) 
+
+        modEmail = input('변경 이메일-> ')
+        modMajor = input('변경 전공-> ')
+        with conn.cursor() as curs:
+            sql = "update member set email=%s, major=%s where name = %s"
+            curs.execute(sql, (modEmail, modMajor, ser_name))
+
+        conn.commit()
+        print("%s님 정보가 변경되었음!" % (ser_name))
+    finally:
+        member = pymysql.NULL
+        conn.close()
+
+if __name__ == '__main__' :
+    memlist = []
+
+    while True:
+        screen()
+        choice = input("-> ")
+
+        if choice == "1":
+            createMember()
+        elif choice == "2":
+            memberAllList()
+        elif choice == "3":
+            memberSearch()
+        elif choice == "4":
+            memberModify()
+        elif choice == "5" :
+            os.system("cls")
+        elif choice == "6":
+            sys.exit(1)
+        else:
+            print("잘못된 번호! 다시 입력바랍니다.")
+
+# CREATE TABLE `member` (
+#   `id` int(11) NOT NULL AUTO_INCREMENT,
+#   `name` varchar(200) DEFAULT NULL,
+#   `email` varchar(200) DEFAULT NULL,
+#   `major` varchar(200) DEFAULT NULL,
+#   PRIMARY KEY (`id`)
+# ) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=latin1;
